@@ -70,8 +70,8 @@ for ckpt in ckpt_list:
         for i in range(img.shape[0]):
             curr_slice = img[i,:,:]
             out = network.test_model(model_path+ckpt, curr_slice, input_sz, step)
-            out[out>=0]=255
-            out[out<0]=0
+            out[out>0]=255
+            out[out<=0]=0
             out = np.uint8(out)
             result[i,:,:] = out
         save_name = 'result_{}_{}.tif'.format(os.path.splitext(ckpt)[0], os.path.splitext(os.path.basename(curr_name[0]))[0])
