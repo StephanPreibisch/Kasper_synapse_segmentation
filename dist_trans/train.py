@@ -12,7 +12,7 @@ import time
 import glob
 
 
-data_path = '/groups/podgorski/podgorskilab/synapse_segmentation/processed_cellpose/train/'
+data_path = '/groups/scicompsoft/home/preibischs/conda-projects/Kaspar_data/train/'
 img_files = glob.glob(data_path+'*.tif')
 img_mask_name = []
 for img_name in img_files:
@@ -20,7 +20,7 @@ for img_name in img_files:
     pair_name = (img_name, mask_name)
     img_mask_name.append(pair_name)
 
-save_path = '/groups/podgorski/podgorskilab/synapse_segmentation/dingx/models/unet_depth3_disttrans'
+save_path = '/groups/scicompsoft/home/preibischs/conda-projects/Kaspar_data/models/unet_depth3_disttrans'
 if not os.path.exists(save_path):
     os.mkdir(save_path)
 
@@ -46,10 +46,10 @@ crop_sz = (64, 64)
 num_data = 10000
 transform = transforms.Compose([FlipSample(), RotSample(), ToTensor()])
 batch_sz = 128
-total_epoch = 10000
+total_epoch = 100 #10000
 train_loss_total = []
 eval_loss_total = []
-save_iter = 100
+save_iter = 10 #100
 start_time = time.time()
 
 for epoch in range(total_epoch):

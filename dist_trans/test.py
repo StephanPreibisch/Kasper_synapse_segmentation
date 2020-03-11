@@ -11,32 +11,27 @@ import matplotlib.pyplot as plt
 import json
 
 
-model_path = '/groups/podgorski/podgorskilab/synapse_segmentation/dingx/models/unet_depth3_disttrans/'
+model_path = '/groups/scicompsoft/home/preibischs/conda-projects/Kaspar_data/models/unet_depth3_disttrans/'
 
-# with open(model_path+'loss.json', 'r') as f:
-#     loss = json.load(f)
-# train_loss_total = loss['train_loss_total']
-# eval_loss_total = loss['eval_loss_total']
-# plt.figure()
-# plt.plot(range(len(train_loss_total)), train_loss_total, 'k', label='Train')
-# plt.plot(range(len(eval_loss_total)), eval_loss_total, 'b', label='Test')
-# plt.xlabel('epochs')
-# plt.ylabel('loss')
-# plt.legend(loc='upper right')
-# plt.savefig(model_path+'/loss.pdf')
-# plt.show()
+with open(model_path+'loss.json', 'r') as f:
+    loss = json.load(f)
+train_loss_total = loss['train_loss_total']
+eval_loss_total = loss['eval_loss_total']
+plt.figure()
+plt.plot(range(len(train_loss_total)), train_loss_total, 'k', label='Train')
+plt.plot(range(len(eval_loss_total)), eval_loss_total, 'b', label='Test')
+plt.xlabel('epochs')
+plt.ylabel('loss')
+plt.legend(loc='upper right')
+plt.savefig(model_path+'/loss.pdf')
+plt.show()
 
 # test data
-data_path = '/groups/podgorski/podgorskilab/synapse_segmentation/processed_cellpose/test/'
+data_path = '/groups/scicompsoft/home/preibischs/conda-projects/Kaspar_data/test/'
 img_files = glob.glob(data_path+'*.tif')
-img_mask_name = []
-for img_name in img_files:
-    mask_name = os.path.splitext(img_name)[0] + '_manual.npy'
-    pair_name = (img_name, mask_name)
-    img_mask_name.append(pair_name)
 
 # checkpoint
-ckpt_list = ['model_ckpt_2000.pt', 'model_ckpt_10000.pt']
+ckpt_list = ['model_ckpt_50.pt', 'model_ckpt_100.pt']
 
 # Define the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,21 +53,19 @@ step = (68, 68)
 # Load checkpoints
 for ckpt in ckpt_list:
     print("Test checkpoint {}".format(ckpt))
-    for idx in range(len(img_mask_name)):
-        curr_name = img_mask_name[idx]
-        assert os.path.exists(curr_name[0]) and os.path.exists(curr_name[1]), \
-            'Image or mask does not exist!'
-        img = imread(curr_name[0]).astype(float)
+    for idx in range(len(img_files)):
+        curr_name = img_files[idx]
+        img = imread(curr_name).astype(float)
         mu = img.mean(axis=(1,2))
         sigma = img.std(axis=(1,2))
         img = (img - mu.reshape(len(mu),1,1)) / sigma.reshape(len(sigma),1,1)
-        result = np.zeros(img.shape, dtype='uint8')
+        result = np.zeros(img.shape, dtype='float32')#'uint8')
         for i in range(img.shape[0]):
             curr_slice = img[i,:,:]
             out = network.test_model(model_path+ckpt, curr_slice, input_sz, step)
-            out[out>0]=255
-            out[out<=0]=0
-            out = np.uint8(out)
+            #out[out>0]=255
+            #out[out<=0]=0
+            #out = np.uint8(out)
             result[i,:,:] = out
         save_name = 'result_{}_{}.tif'.format(os.path.splitext(ckpt)[0], os.path.splitext(os.path.basename(curr_name[0]))[0])
         imsave(data_path+save_name, result)
